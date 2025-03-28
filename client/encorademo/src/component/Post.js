@@ -6,13 +6,22 @@ import {
   updatePost,
   setPage,
 } from "../store/actions";
+import {
+  PencilSquareIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/solid";
+import EditPostModal from "./EditPostModal";
 
 function Post() {
   const dispatch = useDispatch();
+
+  const [form, setForm] = useState({ title: "", body: "" });
+  const [searchQuery, setSearchQuery] = useState("");
+
   const { posts, selectedPost, page, total, limit } = useSelector(
     (state) => state
   );
-  const [form, setForm] = useState({ title: "", body: "" });
 
   useEffect(() => {
     dispatch(fetchPosts(page));
@@ -37,6 +46,8 @@ function Post() {
   const handleEdit = (e) => {
     e.preventDefault();
     dispatch(updatePost({ ...selectedPost, ...form }));
+    setSearchQuery("");
+    dispatch(setSelectedPost(null));
   };
 
   const totalPages = Math.ceil(total / limit) || 1;
@@ -50,116 +61,102 @@ function Post() {
 
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
     const match = posts.find((p) => p.title.toLowerCase().includes(query));
     if (match) dispatch(setSelectedPost(match));
   };
 
+  const closeModal = () => {
+    setForm({ title: "", body: "" });
+    setSearchQuery("");
+    dispatch(setSelectedPost(null));
+  };
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Post Manager</h1>
+    <div className="p-6 max-w-6xl mx-auto bg-red">
+      <h1 className="text-3xl font-extrabold text-gray-900 tracking-wide font-serif text-center">
+        Post Manager
+      </h1>
 
       <input
-        className="border border-gray-300 rounded px-3 py-2 mb-4 w-full"
+        className="border border-gray-300 rounded-lg px-4 py-2 mb-4 w-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
         placeholder="Search by title"
         list="titles"
+        value={searchQuery}
         onChange={handleSearch}
       />
+
       <datalist id="titles">
         {posts.map((p) => (
           <option key={p.id} value={p.title} />
         ))}
       </datalist>
-
       {selectedPost && (
-        <form
-          onSubmit={handleEdit}
-          className="bg-gray-100 p-4 mb-6 rounded shadow"
-        >
-          <h2 className="text-lg font-semibold mb-3">Edit Post</h2>
-          <input
-            name="title"
-            className="border border-gray-300 rounded px-3 py-2 mb-3 w-full"
-            value={form.title}
-            onChange={handleInputChange}
-            placeholder="Title"
-          />
-          <textarea
-            name="body"
-            className="border border-gray-300 rounded px-3 py-2 mb-3 w-full"
-            value={form.body}
-            onChange={handleInputChange}
-            placeholder="Body"
-          />
-          <button
-            type="submit"
-            disabled={isSaveDisabled}
-            className={`px-4 py-2 rounded text-white ${
-              isSaveDisabled
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            Save
-          </button>
-        </form>
+        <EditPostModal
+          selectedPost={selectedPost}
+          form={form}
+          handleInputChange={handleInputChange}
+          handleEdit={handleEdit}
+          isSaveDisabled={isSaveDisabled}
+          closeModal={closeModal}
+        />
       )}
-
-      <table className="w-full table-auto border-collapse mb-4">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border px-4 py-2">ID</th>
-            <th className="border px-4 py-2">Title</th>
-            <th className="border px-4 py-2">Body</th>
-            <th className="border px-4 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {posts.map((post) => (
-            <tr key={post.id} className="hover:bg-gray-50">
-              <td className="border px-4 py-2">{post.id}</td>
-              <td className="border px-4 py-2">{post.title}</td>
-              <td className="border px-4 py-2">{post.body}</td>
-              <td className="border px-4 py-2">
-                <button
-                  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                  onClick={() => dispatch(setSelectedPost(post))}
-                >
-                  Edit
-                </button>
-              </td>
+      <div className="overflow-x-auto w-full">
+        <table className="w-full min-w-[600px] border border-gray-300 rounded-lg overflow-hidden shadow-md">
+          <thead>
+            <tr className="bg-gray-100 text-gray-700 uppercase text-sm">
+              <th className="px-6 py-3 text-left border-b">ID</th>
+              <th className="px-6 py-3 text-left border-b">Title</th>
+              <th className="px-6 py-3 text-left border-b">Body</th>
+              <th className="px-6 py-3 text-center border-b">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {posts.map((post) => (
+              <tr key={post.id} className="hover:bg-gray-50 transition">
+                <td className="px-6 py-4 text-gray-800">{post.id}</td>
+                <td className="px-6 py-4 text-gray-800">{post.title}</td>
+                <td className="px-6 py-4 text-gray-600 truncate max-w-xs">
+                  {post.body}
+                </td>
+                <td className="px-6 py-4 flex justify-center items-center">
+                  <PencilSquareIcon
+                    className="w-6 h-6 text-blue-600 cursor-pointer hover:text-blue-700 transition"
+                    onClick={() => dispatch(setSelectedPost(post))}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <div className="flex items-center justify-between mt-4">
-        <button
-          className={`px-4 py-2 rounded ${
+      <div className="flex items-center justify-center space-x-6 mt-6">
+        <ChevronLeftIcon
+          className={`w-8 h-8 cursor-pointer ${
             page === 1
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-gray-400 hover:bg-gray-500"
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-blue-600 hover:text-blue-700"
           }`}
-          onClick={() => dispatch(setPage(Math.max(1, page - 1)))}
-          disabled={page === 1}
-        >
-          Prev
-        </button>
+          onClick={() => page > 1 && dispatch(setPage(Math.max(1, page - 1)))}
+        />
 
-        <span className="text-gray-700">
+        <span className="text-gray-800 font-medium text-lg">
           Page {page} of {totalPages}
         </span>
 
-        <button
-          className={`px-4 py-2 rounded ${
+        <ChevronRightIcon
+          className={`w-8 h-8 cursor-pointer ${
             page >= totalPages
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-gray-400 hover:bg-gray-500"
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-blue-600 hover:text-blue-700"
           }`}
-          onClick={() => dispatch(setPage(Math.min(totalPages, page + 1)))}
-          disabled={page >= totalPages}
-        >
-          Next
-        </button>
+          onClick={() =>
+            page < totalPages &&
+            dispatch(setPage(Math.min(totalPages, page + 1)))
+          }
+        />
       </div>
     </div>
   );
