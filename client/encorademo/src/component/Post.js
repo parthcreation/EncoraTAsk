@@ -16,33 +16,40 @@ import EditPostModal from "./EditPostModal";
 function Post() {
   const dispatch = useDispatch();
 
+  // State for managing form data and search input
   const [form, setForm] = useState({ title: "", body: "" });
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Extracting necessary values from Redux store
   const { posts, selectedPost, page, total, limit } = useSelector(
     (state) => state
   );
 
+  // Fetch posts whenever the page value changes
   useEffect(() => {
     dispatch(fetchPosts(page));
   }, [dispatch, page]);
 
+  // When a post is selected, populate the form with its data
   useEffect(() => {
     if (selectedPost) {
       setForm({ title: selectedPost.title, body: selectedPost.body });
     }
   }, [selectedPost]);
 
+  // Handle input change for form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
 
+    // If the title matches an existing post, auto-select it
     if (name === "title") {
       const match = posts.find((p) => p.title === value);
       if (match) dispatch(setSelectedPost(match));
     }
   };
 
+  // Handle form submission for editing a post
   const handleEdit = (e) => {
     e.preventDefault();
     dispatch(updatePost({ ...selectedPost, ...form }));
@@ -50,15 +57,19 @@ function Post() {
     dispatch(setSelectedPost(null));
   };
 
+  // Calculate total number of pages for pagination
   const totalPages = Math.ceil(total / limit) || 1;
 
+  // Determine if the form has been modified
   const isFormDirty =
     selectedPost &&
     (form.title !== selectedPost.title || form.body !== selectedPost.body);
 
+  // Ensure form fields are filled before saving
   const isFormFilled = form.title.trim() && form.body.trim();
   const isSaveDisabled = !isFormDirty || !isFormFilled;
 
+  // Handle search input and match against post titles
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
@@ -67,6 +78,7 @@ function Post() {
     if (match) dispatch(setSelectedPost(match));
   };
 
+  // Close modal and reset form data
   const closeModal = () => {
     setForm({ title: "", body: "" });
     setSearchQuery("");
@@ -79,6 +91,7 @@ function Post() {
         Post Manager
       </h1>
 
+      {/* Search input with datalist for quick selection */}
       <input
         className="border border-gray-300 rounded-lg px-4 py-2 mb-4 w-full text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
         placeholder="Search by title"
@@ -87,11 +100,14 @@ function Post() {
         onChange={handleSearch}
       />
 
+      {/* Datalist for post title suggestions */}
       <datalist id="titles">
         {posts.map((p) => (
           <option key={p.id} value={p.title} />
         ))}
       </datalist>
+
+      {/* Render modal if a post is selected */}
       {selectedPost && (
         <EditPostModal
           selectedPost={selectedPost}
@@ -102,6 +118,8 @@ function Post() {
           closeModal={closeModal}
         />
       )}
+
+      {/* Posts Table */}
       <div className="overflow-x-auto w-full">
         <table className="w-full min-w-[600px] border border-gray-300 rounded-lg overflow-hidden shadow-md">
           <thead>
@@ -121,6 +139,7 @@ function Post() {
                   {post.body}
                 </td>
                 <td className="px-6 py-4 flex justify-center items-center">
+                  {/* Edit icon for selecting a post */}
                   <PencilSquareIcon
                     className="w-6 h-6 text-blue-600 cursor-pointer hover:text-blue-700 transition"
                     onClick={() => dispatch(setSelectedPost(post))}
@@ -132,7 +151,9 @@ function Post() {
         </table>
       </div>
 
+      {/* Pagination Controls */}
       <div className="flex items-center justify-center space-x-6 mt-6">
+        {/* Previous Page Button */}
         <ChevronLeftIcon
           className={`w-8 h-8 cursor-pointer ${
             page === 1
@@ -142,10 +163,12 @@ function Post() {
           onClick={() => page > 1 && dispatch(setPage(Math.max(1, page - 1)))}
         />
 
+        {/* Page Info */}
         <span className="text-gray-800 font-medium text-lg">
           Page {page} of {totalPages}
         </span>
 
+        {/* Next Page Button */}
         <ChevronRightIcon
           className={`w-8 h-8 cursor-pointer ${
             page >= totalPages
