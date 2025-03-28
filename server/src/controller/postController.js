@@ -1,30 +1,36 @@
 const axios = require("axios");
-
-const POSTS_API = "https://jsonplaceholder.typicode.com/posts"; // API URL for fetching posts
+const POSTS_API = "https://jsonplaceholder.typicode.com/posts";
 
 /**
- * @desc   Fetch all posts with pagination support.
- * @route  GET /api/posts?page={page}&limit={limit}
- * @param  {number} req.query.page - The current page number (default: 1).
- * @param  {number} req.query.limit - The number of posts per page (default: 10).
- * @returns {object} JSON response containing total posts count and paginated posts.
+ * @desc   Get all posts
+ * @route  GET /api/posts
  */
 exports.getAllPosts = async (req, res) => {
   try {
-    // Extract page and limit from request query parameters with default values
-    const { page = 1, limit = 10 } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const title = req.query.title?.toLowerCase() || "";
 
-    // Fetch all posts from the external API
-    const { data } = await axios.get(POSTS_API);
+    const { data } = await axios.get(
+      POSTS_API
+    );
 
-    // Calculate the starting index for pagination
+    // Filter by title if title query is provided
+    const filtered = title
+      ? data.filter((post) => post.title.toLowerCase().includes(title))
+      : data;
+
     const start = (page - 1) * limit;
+    const end = start + limit;
 
-    // Slice the posts array to return only the requested page's posts
-    const paginated = data.slice(start, start + parseInt(limit));
+    const paginated = filtered.slice(start, end);
 
-    // Send response with total number of posts and paginated posts
-    res.json({ total: data.length, posts: paginated });
+    res.json({
+      total: filtered.length,
+      page,
+      limit,
+      posts: paginated,
+    });
   } catch (err) {
     console.error("Error fetching posts:", err.message);
     res.status(500).json({ error: "Failed to fetch posts" });

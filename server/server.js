@@ -1,21 +1,16 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config(); // Load environment variables from .env file
+require("dotenv").config();
+//const postsRoutes = require("./src/routes/postRoutes.js");
 const postsRoutes = require("./src/routes/postRoutes.js");
-
 const app = express();
 
-// Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing (CORS)
-app.use(express.json()); // Parse incoming JSON requests
+app.use(cors());
+app.use(express.json());
 
-// Routes
-app.use("/api/posts", postsRoutes); // Mount post-related routes under /api/posts
+app.use("/api/posts", postsRoutes);
 
-// Define server port
 const PORT = process.env.PORT || 8000;
-
-// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

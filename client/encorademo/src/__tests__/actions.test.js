@@ -1,7 +1,11 @@
 import * as actions from "../store/actions";
 
 test("should create fetchPosts action", () => {
-  expect(actions.fetchPosts(2)).toEqual({ type: "FETCH_POSTS", page: 2 });
+  expect(actions.fetchPosts(2)).toEqual({
+    type: "FETCH_POSTS",
+    page: 2,
+    title: "",
+  });
 });
 
 test("should create updatePost action", () => {

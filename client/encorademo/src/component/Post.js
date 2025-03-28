@@ -26,9 +26,10 @@ function Post() {
   );
 
   // Fetch posts whenever the page value changes
+
   useEffect(() => {
-    dispatch(fetchPosts(page));
-  }, [dispatch, page]);
+    dispatch(fetchPosts(page, searchQuery));
+  }, [dispatch, page, searchQuery]);
 
   // When a post is selected, populate the form with its data
   useEffect(() => {
@@ -53,7 +54,6 @@ function Post() {
   const handleEdit = (e) => {
     e.preventDefault();
     dispatch(updatePost({ ...selectedPost, ...form }));
-    setSearchQuery("");
     dispatch(setSelectedPost(null));
   };
 
@@ -75,13 +75,12 @@ function Post() {
     setSearchQuery(query);
 
     const match = posts.find((p) => p.title.toLowerCase().includes(query));
-    if (match) dispatch(setSelectedPost(match));
+    // if (match) dispatch(setSelectedPost(match));
   };
 
   // Close modal and reset form data
   const closeModal = () => {
     setForm({ title: "", body: "" });
-    setSearchQuery("");
     dispatch(setSelectedPost(null));
   };
 
